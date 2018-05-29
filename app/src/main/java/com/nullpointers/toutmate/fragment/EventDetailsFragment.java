@@ -83,7 +83,10 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
 
     private List<Expense>expenseList = new ArrayList<>();
     private List<Moment>momentList = new ArrayList<>();
-    private String expensePercent = "";
+    private double totalExpense;
+    private double totalExpensePercent;
+    private int progress;
+    private String expensePercent = "0.0%";
     private String totalBudgetPercent = "100%";
     private String expenseKey;
     private TourMateDatabase database;
@@ -128,7 +131,7 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
         eventNameTextView = view.findViewById(R.id.eventNameTextView);
         budgetStatusTextView = view.findViewById(R.id.budgetStatusTextView);
         expensePercentTextView = view.findViewById(R.id.expensePercent);
-        totalBudgetPercentTextView = view.findViewById(R.id.budgetStatusTextView);
+        totalBudgetPercentTextView = view.findViewById(R.id.totalBudget);
         budgetStatusProgressBar = view.findViewById(R.id.budgetStatusProgressBar);
         firebaseAuth = FirebaseAuth.getInstance();
         user  = firebaseAuth.getCurrentUser();
@@ -159,15 +162,6 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
            createdDate = event.getCreatedDate();
            departureDate = event.getDepartureDate();
            budget = event.getBudget();
-           String totalBudget = String.valueOf(event.getBudget());
-           String totalExpense = "100";
-           String budgetStatus = String.format("Budget Status (%s/%s)",totalExpense,totalBudget);
-           eventNameTextView.setText(eventName);
-           budgetStatusTextView.setText(budgetStatus);
-           expensePercentTextView.setText(expensePercent);
-           totalBudgetPercentTextView.setText(totalBudget);
-           expensePercentTextView.setText(expensePercent);
-           totalBudgetPercentTextView.setText(totalBudgetPercent);
            expenseRef = eventRef.child(eventKey).child("Expense");
            momentKey = database.getNewMomentKey(eventKey);
            momentRef = eventRef.child(eventKey).child("Moment");
@@ -176,11 +170,33 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
         expenseRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                expenseList.clear();
-                for (DataSnapshot postData: dataSnapshot.getChildren()){
-                    Expense expense = postData.getValue(Expense.class);
-                    expenseList.add(expense);
-                }
+                    expenseList.clear();
+                    for (DataSnapshot postData: dataSnapshot.getChildren()){
+                        Expense expense = postData.getValue(Expense.class);
+                        expenseList.add(expense);
+                        totalExpense = Math.round(totalExpense+expense.getExpenseAmount());
+
+                    }
+
+                    if (expenseList.size()>0){
+                        totalExpensePercent = Math.round((totalExpense*100)/budget);
+                        expensePercent = String.valueOf(totalExpensePercent+"%");
+                        progress = (int) totalExpensePercent;
+                        budgetStatusProgressBar.setProgress(progress);
+                        String budgetStatus = String.format("Budget Status (%s/%s)",totalExpense,budget);
+                        eventNameTextView.setText(eventName);
+                        budgetStatusTextView.setText(budgetStatus);
+                        expensePercentTextView.setText(expensePercent);
+                        totalBudgetPercentTextView.setText(totalBudgetPercent);
+                        }else {
+                        budgetStatusProgressBar.setProgress(progress);
+                        String budgetStatus = String.format("Budget Status (%s/%s)","0.0",budget);
+                        eventNameTextView.setText(eventName);
+                        budgetStatusTextView.setText(budgetStatus);
+                        expensePercentTextView.setText(expensePercent);
+                        totalBudgetPercentTextView.setText(totalBudgetPercent);
+                    }
+
             }
 
             @Override

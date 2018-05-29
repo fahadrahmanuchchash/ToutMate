@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity
 
         client = LocationServices.getFusedLocationProviderClient(this);
 
-        getLocations();
+        //getLocations();
 
         setSupportActionBar(toolbar);
 
@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity
 
         navigationView.setNavigationItemSelectedListener(this);
         displaySelectedScreen(R.id.action_home);
+        checkLocationPermission();
     }
 
     @Override
@@ -172,4 +173,14 @@ public class MainActivity extends AppCompatActivity
             fragment.onActivityResult(requestCode,resultCode,data);
         }
     }
+
+    /*@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        if (requestCode == 10 && resultCode == RESULT_OK && data!=null){
+            for (Fragment fragment: getSupportFragmentManager().getFragments()){
+                fragment.onActivityResult(requestCode,resultCode,data);
+            }
+        }
+    }*/
 }

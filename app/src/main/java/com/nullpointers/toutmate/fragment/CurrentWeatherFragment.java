@@ -15,14 +15,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.nullpointers.toutmate.MainActivity;
 import com.nullpointers.toutmate.Model.CurrentWeatherResponse;
 import com.nullpointers.toutmate.Model.DateConverter;
 import com.nullpointers.toutmate.R;
 import com.nullpointers.toutmate.WeatherAPI;
+import com.nullpointers.toutmate.WeatherActivity;
 import com.squareup.picasso.Picasso;
 
 import retrofit2.Call;
@@ -35,7 +38,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * A simple {@link Fragment} subclass.
  */
 public class CurrentWeatherFragment extends Fragment {
-    private String units = "metric";
+    private String units;// = WeatherActivity.units;
     private WeatherAPI weatherAPI;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private CurrentWeatherResponse currentWeatherResponse;
@@ -112,22 +115,6 @@ public class CurrentWeatherFragment extends Fragment {
         sunsetIconIV = view.findViewById(R.id.sunsetIconIV);
         pressureIconIV = view.findViewById(R.id.rainIconIV);
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
-
-        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(),new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},10);
-            return;
-        }
-        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
-                getCurrentWeatherData();
-            }
-        });
-
-
     }
 
     private void getCurrentWeatherData() {
@@ -177,12 +164,11 @@ public class CurrentWeatherFragment extends Fragment {
         if (units.equals("metric")) {
             tempTextView.setText(temp + " \u00B0C");
             maxTempTextView.setText(main.getTempMax() + " \u00B0C");
-            maxTV.setText("Max");
+
             tempIconIV.setImageResource(R.drawable.temperature);
             minTempTextView.setText(main.getTempMin() + " \u00B0C");
         } else if (units.equals("imperial")) {
             tempTextView.setText(temp + " \u00B0F");
-            minTV.setText("Min");
             maxTempTextView.setText(main.getTempMax() + " \u00B0F");
             minTempTextView.setText(main.getTempMin() + " \u00B0F");
         }
@@ -193,6 +179,8 @@ public class CurrentWeatherFragment extends Fragment {
         long sunrise = sys.getSunrise();
         long sunset = sys.getSunset();
 
+        maxTV.setText("Max");
+        minTV.setText("Min");
         sunriseTextView.setText(converter.getTimeFromUnix(sunrise));
         sunriseTV.setText("Sun Rise");
         sunsetTextView.setText(converter.getTimeFromUnix(sunset));
@@ -207,6 +195,32 @@ public class CurrentWeatherFragment extends Fragment {
         locationTextView.setText(currentWeatherResponse.getName());
 
         Picasso.get().load("https://openweathermap.org/img/w/" + imageIdStr + ".png").into(weatherIconImageView);
+    }
+
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        units = WeatherActivity.units;
+        if (WeatherActivity.isLocationOn(getContext())){
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getActivity());
+
+            if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(),new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},10);
+                return;
+            }
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+                    getCurrentWeatherData();
+                }
+            });
+        }else {
+            Toast.makeText(getContext(), "Location Not On. Please On Your Device Location then Try Again", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
